@@ -69,7 +69,6 @@ WL.SCENE.createScene = function () {
 };
 
 WL.SCENE.createLights = function () {
-
     // gradient color light
     // THREE.HemisphereLight(skycolor, groundcolor, intensity);
     WL.SCENE.hemisphereLight = new THREE.HemisphereLight(0xaaaaaa,0x000000, .9);
@@ -121,7 +120,17 @@ WL.SCENE.createSea = function () {
     WL.SCENE.OBJ.sea = new WL.SCENE.OBJ.Sea();
     WL.SCENE.OBJ.sea.mesh.position.y = -600;
     WL.SCENE.scene.add(WL.SCENE.OBJ.sea.mesh);
-}
+};
+
+WL.SCENE.OBJ.Sky = function () {
+    // empty container
+    this.mesh = new THREE.Object3D();
+
+    // create cube geometry
+    var geom = new THREE.BoxGeometry(20, 20, 20);
+
+    //create a material
+};
 
 
 WL.EVENT.handleWindowResize = function () {
@@ -130,7 +139,7 @@ WL.EVENT.handleWindowResize = function () {
     WL.SCENE.renderer.setSize(WL.ENV.width, WL.ENV.height);
     WL.SCENE.camera.aspect = WL.ENV.width /  WL.ENV.height;
     console.log('resizing');
-}
+};
 
 
 WL.init = function () {
