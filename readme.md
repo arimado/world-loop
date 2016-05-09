@@ -1,7 +1,5 @@
 #World-loop
 
-A web-game to learn Three.js stuff
+Going through [The Aviator Three.js web game tutorial](http://tympanus.net/codrops/2016/04/26/the-aviator-animating-basic-3d-scene-threejs/) to learn the library.
 
-[logo]: http://codropspz.tympanus.netdna-cdn.com/codrops/wp-content/uploads/2016/04/Animated3DScene_three-components.png "Diagram"
-
-Source tutorial: http://tympanus.net/codrops/2016/04/26/the-aviator-animating-basic-3d-scene-threejs/
+![Scene](http://codropspz.tympanus.netdna-cdn.com/codrops/wp-content/uploads/2016/04/Animated3DScene_Part1_Part2.jpg)
