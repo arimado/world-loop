@@ -116,22 +116,88 @@ WL.SCENE.OBJ.Sea = function () {
     // add the mesh to our scene ---------------
 };
 
-WL.SCENE.createSea = function () {
-    WL.SCENE.OBJ.sea = new WL.SCENE.OBJ.Sea();
-    WL.SCENE.OBJ.sea.mesh.position.y = -600;
-    WL.SCENE.scene.add(WL.SCENE.OBJ.sea.mesh);
+WL.SCENE.OBJ.Cloud = function () {
+    // empty container
+    this.mesh = new THREE.Object3D();
+    // create cube geometry
+    var geom = new THREE.BoxGeometry(20, 20, 20);
+
+    //create a material
+    var mat = new THREE.MeshPhongMaterial({color: WL.ENV.color.white});
+
+    //duplicate the geom x mat a random number of times
+    var nBlocs = 3+Math.floor(Math.random()*3) // generate always at least 3 blocks
+
+    for (var i = 0; i < nBlocs; i += 1) {
+        var m = new THREE.Mesh(geom, mat);
+        m.position.x = i * 15; //why this?
+        // random position to a factor of 10
+        m.position.y = Math.random() * 10;
+        m.position.z = Math.random() * 10;
+        // random rotation to a factor of idk 2 or something
+        m.rotation.z = Math.random() * Math.PI * 2;
+        m.rotation.y = Math.random() * Math.PI * 2;
+    }
+
+    // set random size
+    var s = .1 + Math.random() * .9 // rand num between .1 and .9999999
+    m.scale.set(s, s, s);
+
+    // allow each cube to cast and to receive shadows
+    m.castShadow = true;
+    m.receiveShadow = true;
+
+    // add cube to the container we created
+    this.mesh.add(m);
+    console.log('cloud');
 };
 
 WL.SCENE.OBJ.Sky = function () {
     // empty container
     this.mesh = new THREE.Object3D();
 
-    // create cube geometry
-    var geom = new THREE.BoxGeometry(20, 20, 20);
+    // part of the sky object that will be created
+    this.nClouds = 20                                                           // TEST IF THIS WORKS
+                                                                                // Not assigned to this
+    // equal angle between clouds
+    // 2PI is equal to a circle
+    var stepAngle = Math.PI * 2 / this.nClouds;
 
-    //create a material
+    for (var i = 0; i < this.nClouds; i += 1) {
+        var cloud = new WL.SCENE.OBJ.Cloud();
+
+        // set rotation and position of each cloud
+        var angle = stepAngle * i;
+        var height = 750 + Math.random() * 200;                                 // Check if this is
+                                                                                // Actually height
+        //convert polar coordinates (angle distance) into
+        //cartesian coordinates
+        cloud.mesh.position.y = Math.sin(angle) * height;
+        cloud.mesh.position.x = Math.sin(angle) * height;
+
+        //rotate cloud according to its position
+        cloud.mesh.rotation.z = angle + Math.PI/2;                              // Just check if all these
+                                                                                // do what you think they do
+        // set random scale for each cloud
+        var scale = 1 + Math.random() * 2;
+        cloud.mesh.scale.set(scale, scale, scale);
+
+        this.mesh.add(cloud.mesh);
+    }
+}
+
+
+WL.SCENE.createSea = function () {
+    WL.SCENE.OBJ.sea = new WL.SCENE.OBJ.Sea();
+    WL.SCENE.OBJ.sea.mesh.position.y = -600;
+    WL.SCENE.scene.add(WL.SCENE.OBJ.sea.mesh);
 };
 
+WL.SCENE.createSky = function () {
+    WL.SCENE.OBJ.sky = new WL.SCENE.OBJ.Sky();
+    WL.SCENE.OBJ.sky.mesh.position.y = -600;
+    WL.SCENE.scene.add(WL.SCENE.OBJ.sky.mesh);
+};
 
 WL.EVENT.handleWindowResize = function () {
     WL.ENV.height = window.innerHeight;
@@ -148,20 +214,9 @@ WL.init = function () {
     WL.SCENE.createScene();
     WL.SCENE.createLights();
     WL.SCENE.createSea();
+    WL.SCENE.createSky();
+
     WL.SCENE.renderer.render(WL.SCENE.scene, WL.SCENE.camera);
-
-    //
-    // // add the lights
-
-    //
-    // // add the objects
-    // createPlane();
-    // createSea();
-    // createSky();
-    //
-    // // start a loop that will update the objects' positions
-    // // and render the scene on each frame
-    // loop();
 
     console.log('initialised');
 
