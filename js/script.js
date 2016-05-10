@@ -2,10 +2,20 @@
 // SOURCE TUTORIAL: http://tympanus.net/codrops/2016/04/26/the-aviator-animating-basic-3d-scene-threejs/
 
 var WL = {};
+WL.UTIL = {};
 WL.ENV = {};
 WL.SCENE = {};
 WL.SCENE.OBJ = {};
 WL.EVENT = {};
+
+WL.UTIL.normalize = function (v, vmin, vmax, tmin, tmax) {
+    var nv = Math.max(Math.min(v,vmax), vmin);
+	var dv = vmax-vmin;
+	var pc = (nv-vmin)/dv;
+	var dt = tmax-tmin;
+	var tv = tmin + (pc*dt);
+	return tv;
+}
 
 WL.ENV.color = {
     red: 0xf25346,
@@ -15,6 +25,8 @@ WL.ENV.color = {
 	brownDark: 0x23190f,
 	blue: 0x68c3c0
 };
+
+WL.ENV.mousePos = {x: 0, y:0};
 
 WL.SCENE.OBJ.Sea = function () {
     // create a geometry ----------------------
@@ -78,7 +90,7 @@ WL.SCENE.OBJ.Sky = function () {
     this.mesh = new THREE.Object3D();
 
     // part of the sky object that will be created
-    this.nClouds = 1000;                                                            // TEST IF THIS WORKS
+    this.nClouds = 30;                                                            // TEST IF THIS WORKS
                                                                                 // Not assigned to this
     // equal angle between clouds
     // 2PI is equal to a circle
@@ -106,6 +118,187 @@ WL.SCENE.OBJ.Sky = function () {
 
         this.mesh.add(cloud.mesh);
     }
+}
+
+WL.SCENE.OBJ.Plane = function () {
+    // create geomtries
+    // create material
+    // add geom to mesh
+    // create 4 geomoties and materials and add them to the container mesh
+
+    this.mesh = new THREE.Object3D();
+
+    // COCKPIT
+    var geomCockpit = new THREE.BoxGeometry(60,50,50,1,1,1);
+    var matCockpit = new THREE.MeshPhongMaterial(
+        {color: WL.ENV.color.red,
+         shading: THREE.FlatShading});
+
+     geomCockpit.vertices[4].y-=10;
+     geomCockpit.vertices[4].z+=20;
+     geomCockpit.vertices[5].y-=20;
+     geomCockpit.vertices[5].z-=20;
+     geomCockpit.vertices[6].y+=30;
+     geomCockpit.vertices[6].z+=20;
+     geomCockpit.vertices[7].y+=30;
+     geomCockpit.vertices[7].z-=20;
+
+    var cockpit = new THREE.Mesh(geomCockpit, matCockpit);
+    this.mesh.add(cockpit);
+
+    // CREATE ENGINE
+    var geomEngine = new THREE.BoxGeometry(20,50,50,1,1,1);
+    var matEngine = new THREE.MeshPhongMaterial({color:WL.ENV.color.white,
+         shading:THREE.FlatShading});
+    var engine = new THREE.Mesh(geomEngine, matEngine);
+
+    engine.position.x = 40;
+    engine.castShadow = true;
+    engine.receiveShadow = true;
+    this.mesh.add(engine);
+
+    // TAIL
+    var geomTailPlane = new THREE.BoxGeometry(15,20,5,1,1,1);
+	var matTailPlane = new THREE.MeshPhongMaterial({color:WL.ENV.color.red,
+        shading:THREE.FlatShading});
+	var tailPlane = new THREE.Mesh(geomTailPlane, matTailPlane);
+
+    tailPlane.position.set(-35,25,0);
+	tailPlane.castShadow = true;
+	tailPlane.receiveShadow = true;
+
+	this.mesh.add(tailPlane);
+
+    // Create the wing
+	var geomSideWing = new THREE.BoxGeometry(40,8,150,1,1,1);
+	var matSideWing = new THREE.MeshPhongMaterial({color:WL.ENV.color.red,
+        shading:THREE.FlatShading});
+	var sideWing = new THREE.Mesh(geomSideWing, matSideWing);
+	sideWing.castShadow = true;
+	sideWing.receiveShadow = true;
+	this.mesh.add(sideWing);
+
+	// propeller
+	var geomPropeller = new THREE.BoxGeometry(20,10,10,1,1,1);
+	var matPropeller = new THREE.MeshPhongMaterial({color:WL.ENV.color.brown,
+         shading:THREE.FlatShading});
+	this.propeller = new THREE.Mesh(geomPropeller, matPropeller); // WHATS
+	this.propeller.castShadow = true;
+	this.propeller.receiveShadow = true;
+
+	// blades
+	var geomBlade = new THREE.BoxGeometry(1,100,20,1,1,1);
+	var matBlade = new THREE.MeshPhongMaterial({color:WL.ENV.color.brownDark,
+         shading:THREE.FlatShading});
+	var blade = new THREE.Mesh(geomBlade, matBlade);
+	blade.position.set(8,0,0);
+	blade.castShadow = true;
+	blade.receiveShadow = true;
+	this.propeller.add(blade);
+	this.propeller.position.set(50,0,0);
+	this.mesh.add(this.propeller);
+
+    // PILOT
+    this.pilot = new WL.SCENE.OBJ.Pilot();
+    this.pilot.mesh.position.set(-10, 27, 0);
+    this.mesh.add(this.pilot.mesh);
+};
+
+WL.SCENE.OBJ.Pilot = function () {
+
+    this.mesh = new THREE.Object3D();
+
+    this.mesh.name = "pilot";
+    this.angleHairs = 0;
+
+    // BODY
+    var bodyGeom = new THREE.BoxGeometry(15,15,15);
+	var bodyMat = new THREE.MeshPhongMaterial({color:WL.ENV.color.brown, shading:THREE.FlatShading});
+	var body = new THREE.Mesh(bodyGeom, bodyMat);
+	body.position.set(2,-12,0);
+	this.mesh.add(body);
+
+    //FACE ******
+    var faceGeom = new THREE.BoxGeometry(10,10,10);
+	var faceMat = new THREE.MeshLambertMaterial({color:WL.ENV.color.pink});
+	var face = new THREE.Mesh(faceGeom, faceMat);
+	this.mesh.add(face);
+
+    // HAIR ******
+    var hairGeom = new THREE.BoxGeometry(4,4,4);
+	var hairMat = new THREE.MeshLambertMaterial({color:WL.ENV.color.brown});
+	var hair = new THREE.Mesh(hairGeom, hairMat);
+	// Align the shape of the hair to its bottom boundary, that will make it easier to scale.
+	hair.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0,2,0));
+
+    var hairs = new THREE.Object3D();
+
+    this.hairsTop = new THREE.Object3D();
+
+    for ( var i = 0; i < 12; i += 1) {
+        var h = hair.clone(); // calling this on an 3DObject
+        var col = i % 3;
+        var row = Math.floor(i/3);
+        var startPosZ = -4;
+        var startPosX = -4;
+        h.position.set(startPosX + row*4, 0, startPosZ + col*4);
+        this.hairsTop.add(h);
+    }
+
+    hairs.add(this.hairsTop);
+
+    // SIDE HAIR
+
+    var hairSideGeom = new THREE.BoxGeometry(12,4,2);
+	hairSideGeom.applyMatrix(new THREE.Matrix4().makeTranslation(-6,0,0));
+	var hairSideR = new THREE.Mesh(hairSideGeom, hairMat);
+	var hairSideL = hairSideR.clone();
+	hairSideR.position.set(8,-2,6);
+	hairSideL.position.set(8,-2,-6);
+	hairs.add(hairSideR);
+	hairs.add(hairSideL);
+
+    // create the hairs at the back of the head
+	var hairBackGeom = new THREE.BoxGeometry(2,8,10);
+	var hairBack = new THREE.Mesh(hairBackGeom, hairMat);
+	hairBack.position.set(-1,-4,0)
+	hairs.add(hairBack);
+	hairs.position.set(-5,5,0);
+    this.mesh.add(hairs);
+
+    // GLASS
+
+    var glassGeom = new THREE.BoxGeometry(5,5,5);
+	var glassMat = new THREE.MeshLambertMaterial({color:WL.ENV.color.brown});
+	var glassR = new THREE.Mesh(glassGeom,glassMat);
+	glassR.position.set(6,0,3);
+	var glassL = glassR.clone();
+	glassL.position.z = -glassR.position.z
+
+	var glassAGeom = new THREE.BoxGeometry(11,1,11);
+	var glassA = new THREE.Mesh(glassAGeom, glassMat);
+	this.mesh.add(glassR);
+	this.mesh.add(glassL);
+	this.mesh.add(glassA);
+
+    var earGeom = new THREE.BoxGeometry(2,3,2);
+	var earL = new THREE.Mesh(earGeom,faceMat);
+	earL.position.set(0,0,-6);
+	var earR = earL.clone();
+	earR.position.set(0,0,6);
+	this.mesh.add(earL);
+	this.mesh.add(earR);
+
+}
+
+WL.SCENE.OBJ.Pilot.prototype.updateHairs = function () {
+    var hairs = this.hairsTop.children;
+    var l = hairs.length;
+    for (var i = 0; i < 1; i++) {
+        var h = hairs[i];
+        h.scale.y = .75 + Math.cos(this.angleHairs + i/3) * .25
+    }
+    this.angleHairs += 0.16
 }
 
 WL.SCENE.createScene = function () {
@@ -136,7 +329,7 @@ WL.SCENE.createScene = function () {
     // SET CAMERA
 
     WL.SCENE.camera.position.x = 0;
-    WL.SCENE.camera.position.z = 200; // ORIGINAL 200
+    WL.SCENE.camera.position.z = 80; // ORIGINAL 200
     WL.SCENE.camera.position.y = 100;
 
     // CREATE RENDERER
@@ -201,6 +394,24 @@ WL.SCENE.createSky = function () {
     WL.SCENE.scene.add(WL.SCENE.OBJ.sky.mesh);
 };
 
+WL.SCENE.createPlane = function () {
+    WL.SCENE.OBJ.plane = new WL.SCENE.OBJ.Plane ();
+    WL.SCENE.OBJ.plane.mesh.scale.set(.25, .25, .25);
+    WL.SCENE.OBJ.plane.mesh.position.y = 100;
+    WL.SCENE.scene.add(WL.SCENE.OBJ.plane.mesh);
+};
+
+WL.SCENE.updatePlane = function () {
+    // move plane witihn limited coordinates
+    var targetX = WL.UTIL.normalize(WL.ENV.mousePos.x, -1, 1, -100, 100);
+    var targetY = WL.UTIL.normalize(WL.ENV.mousePos.y, -1, 1, 25, 175);
+
+    WL.SCENE.OBJ.plane.mesh.position.y = targetY;
+    WL.SCENE.OBJ.plane.mesh.position.x = targetX;
+    WL.SCENE.OBJ.plane.propeller.rotation.x += 0.3;
+}
+
+
 WL.EVENT.handleWindowResize = function () {
     WL.ENV.height = window.innerHeight;
     WL.ENV.width = window.innerWidth;
@@ -209,22 +420,34 @@ WL.EVENT.handleWindowResize = function () {
     console.log('resizing');
 };
 
-WL.init = function () {
+WL.EVENT.handleMouseMove = function (event) {
+    // Normalize mouse coordinates between -1/1
+    WL.ENV.mousePos.x = -1 + (event.clientX / WL.ENV.width) * 2;
+    WL.ENV.mousePos.y = 1 - (event.clientY / WL.ENV.height) * 2;
+}
 
-    // // set up the scene, the camera and the renderer
+WL.init = function () {
+    // // set up the scene, the camera and the rendere
     WL.SCENE.createScene();
     WL.SCENE.createLights();
     WL.SCENE.createSea();
     WL.SCENE.createSky();
+    WL.SCENE.createPlane();
+
+    // listener
+
+    document.addEventListener('mousemove', WL.EVENT.handleMouseMove, false);
+
     WL.loop();
     console.log('initialised');
-
 };
 
-
 WL.loop = function () {
+    WL.SCENE.OBJ.plane.propeller.rotation.x += 0.3;
     WL.SCENE.OBJ.sea.mesh.rotation.z += .005;
     WL.SCENE.OBJ.sky.mesh.rotation.z += .01;
+    WL.SCENE.updatePlane();
+    WL.SCENE.OBJ.plane.pilot.updateHairs();
     WL.SCENE.renderer.render(WL.SCENE.scene, WL.SCENE.camera);
     requestAnimationFrame(WL.loop);
 }
