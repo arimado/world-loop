@@ -78,7 +78,7 @@ WL.SCENE.OBJ.Sky = function () {
     this.mesh = new THREE.Object3D();
 
     // part of the sky object that will be created
-    this.nClouds = 20;                                                            // TEST IF THIS WORKS
+    this.nClouds = 1000;                                                            // TEST IF THIS WORKS
                                                                                 // Not assigned to this
     // equal angle between clouds
     // 2PI is equal to a circle
@@ -96,7 +96,7 @@ WL.SCENE.OBJ.Sky = function () {
         //cartesian coordinates
         cloud.mesh.position.y = Math.sin(angle) * height;
         cloud.mesh.position.x = Math.cos(angle) * height;
-
+        cloud.mesh.position.z = -400-Math.random()*400;
         //rotate cloud according to its position
         cloud.mesh.rotation.z = angle + Math.PI/2;                              // Just check if all these
                                                                                 // do what you think they do
