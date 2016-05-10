@@ -16,6 +16,98 @@ WL.ENV.color = {
 	blue: 0x68c3c0
 };
 
+WL.SCENE.OBJ.Sea = function () {
+    // create a geometry ----------------------
+    // Rad-top, Rad-bot, height, segments on radius,
+    var geom = new THREE.CylinderGeometry(600, 600, 800, 40, 10);
+    // rotate it
+    geom.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+    // create a material -----------------------
+    var mat = new THREE.MeshPhongMaterial({
+        color: WL.ENV.color.blue,
+        transparent: true,
+        opacity: .6,
+        shading: THREE.FlatShading
+    });
+    // pass them into a mesh -------------------
+    this.mesh = new THREE.Mesh(geom, mat);
+    this.mesh.receiveShadow = true;
+    // add the mesh to our scene ---------------
+};
+
+WL.SCENE.OBJ.Cloud = function () {
+    // empty container
+    this.mesh = new THREE.Object3D();
+    // create cube geometry
+    var geom = new THREE.BoxGeometry(20, 20, 20);
+
+    //create a material
+    var mat = new THREE.MeshPhongMaterial({color: WL.ENV.color.white});
+
+    //duplicate the geom x mat a random number of times
+    var nBlocs = 3+Math.floor(Math.random()*3) // generate always at least 3 blocks
+    for (var i = 0; i < nBlocs; i += 1) {
+
+        var m = new THREE.Mesh(geom, mat);
+
+        // set position
+        m.position.x = i * 15; //why this?
+        m.position.y = Math.random() * 10;
+        m.position.z = Math.random() * 10;
+
+        // random rotation to a factor of idk 2 or something
+        m.rotation.z = Math.random() * Math.PI * 2;
+        m.rotation.y = Math.random() * Math.PI * 2;
+
+        // set random size
+        var s = .1 + Math.random() * .9 // rand num between .1 and .9999999
+        m.scale.set(s, s, s);
+
+        // allow each cube to cast and to receive shadows
+        m.castShadow = true;
+        m.receiveShadow = true;
+
+        // add cube to the container we created
+        this.mesh.add(m);
+        console.log('cloud');
+    }
+};
+
+WL.SCENE.OBJ.Sky = function () {
+    // empty container
+    this.mesh = new THREE.Object3D();
+
+    // part of the sky object that will be created
+    this.nClouds = 20;                                                            // TEST IF THIS WORKS
+                                                                                // Not assigned to this
+    // equal angle between clouds
+    // 2PI is equal to a circle
+    var stepAngle = Math.PI * 2 / this.nClouds;
+
+    for (var i = 0; i < this.nClouds; i += 1) {
+
+        var cloud = new WL.SCENE.OBJ.Cloud();
+
+        // set rotation and position of each cloud
+        var angle = stepAngle * i;
+        var height = 750 + Math.random() * 200;                                 // Check if this is
+                                                                                // Actually height
+        //convert polar coordinates (angle distance) into
+        //cartesian coordinates
+        cloud.mesh.position.y = Math.sin(angle) * height;
+        cloud.mesh.position.x = Math.cos(angle) * height;
+
+        //rotate cloud according to its position
+        cloud.mesh.rotation.z = angle + Math.PI/2;                              // Just check if all these
+                                                                                // do what you think they do
+        // set random scale for each cloud
+        var scale = 1 + Math.random() * 2;
+        cloud.mesh.scale.set(scale, scale, scale);
+
+        this.mesh.add(cloud.mesh);
+    }
+}
+
 WL.SCENE.createScene = function () {
 
     WL.ENV.height = window.innerHeight;
@@ -44,7 +136,7 @@ WL.SCENE.createScene = function () {
     // SET CAMERA
 
     WL.SCENE.camera.position.x = 0;
-    WL.SCENE.camera.position.z = 200;
+    WL.SCENE.camera.position.z = 200; // ORIGINAL 200
     WL.SCENE.camera.position.y = 100;
 
     // CREATE RENDERER
@@ -97,96 +189,6 @@ WL.SCENE.createLights = function () {
 
 };
 
-WL.SCENE.OBJ.Sea = function () {
-    // create a geometry ----------------------
-    // Rad-top, Rad-bot, height, segments on radius,
-    var geom = new THREE.CylinderGeometry(600, 600, 800, 40, 10);
-    // rotate it
-    geom.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
-    // create a material -----------------------
-    var mat = new THREE.MeshPhongMaterial({
-        color: WL.ENV.color.blue,
-        transparent: true,
-        opacity: .6,
-        shading: THREE.FlatShading
-    });
-    // pass them into a mesh -------------------
-    this.mesh = new THREE.Mesh(geom, mat);
-    this.mesh.receiveShadow = true;
-    // add the mesh to our scene ---------------
-};
-
-WL.SCENE.OBJ.Cloud = function () {
-    // empty container
-    this.mesh = new THREE.Object3D();
-    // create cube geometry
-    var geom = new THREE.BoxGeometry(20, 20, 20);
-
-    //create a material
-    var mat = new THREE.MeshPhongMaterial({color: WL.ENV.color.white});
-
-    //duplicate the geom x mat a random number of times
-    var nBlocs = 3+Math.floor(Math.random()*3) // generate always at least 3 blocks
-
-    for (var i = 0; i < nBlocs; i += 1) {
-        var m = new THREE.Mesh(geom, mat);
-        m.position.x = i * 15; //why this?
-        // random position to a factor of 10
-        m.position.y = Math.random() * 10;
-        m.position.z = Math.random() * 10;
-        // random rotation to a factor of idk 2 or something
-        m.rotation.z = Math.random() * Math.PI * 2;
-        m.rotation.y = Math.random() * Math.PI * 2;
-    }
-
-    // set random size
-    var s = .1 + Math.random() * .9 // rand num between .1 and .9999999
-    m.scale.set(s, s, s);
-
-    // allow each cube to cast and to receive shadows
-    m.castShadow = true;
-    m.receiveShadow = true;
-
-    // add cube to the container we created
-    this.mesh.add(m);
-    console.log('cloud');
-};
-
-WL.SCENE.OBJ.Sky = function () {
-    // empty container
-    this.mesh = new THREE.Object3D();
-
-    // part of the sky object that will be created
-    this.nClouds = 20                                                           // TEST IF THIS WORKS
-                                                                                // Not assigned to this
-    // equal angle between clouds
-    // 2PI is equal to a circle
-    var stepAngle = Math.PI * 2 / this.nClouds;
-
-    for (var i = 0; i < this.nClouds; i += 1) {
-        var cloud = new WL.SCENE.OBJ.Cloud();
-
-        // set rotation and position of each cloud
-        var angle = stepAngle * i;
-        var height = 750 + Math.random() * 200;                                 // Check if this is
-                                                                                // Actually height
-        //convert polar coordinates (angle distance) into
-        //cartesian coordinates
-        cloud.mesh.position.y = Math.sin(angle) * height;
-        cloud.mesh.position.x = Math.sin(angle) * height;
-
-        //rotate cloud according to its position
-        cloud.mesh.rotation.z = angle + Math.PI/2;                              // Just check if all these
-                                                                                // do what you think they do
-        // set random scale for each cloud
-        var scale = 1 + Math.random() * 2;
-        cloud.mesh.scale.set(scale, scale, scale);
-
-        this.mesh.add(cloud.mesh);
-    }
-}
-
-
 WL.SCENE.createSea = function () {
     WL.SCENE.OBJ.sea = new WL.SCENE.OBJ.Sea();
     WL.SCENE.OBJ.sea.mesh.position.y = -600;
@@ -207,7 +209,6 @@ WL.EVENT.handleWindowResize = function () {
     console.log('resizing');
 };
 
-
 WL.init = function () {
 
     // // set up the scene, the camera and the renderer
@@ -215,11 +216,17 @@ WL.init = function () {
     WL.SCENE.createLights();
     WL.SCENE.createSea();
     WL.SCENE.createSky();
-
-    WL.SCENE.renderer.render(WL.SCENE.scene, WL.SCENE.camera);
-
+    WL.loop();
     console.log('initialised');
 
 };
+
+
+WL.loop = function () {
+    WL.SCENE.OBJ.sea.mesh.rotation.z += .005;
+    WL.SCENE.OBJ.sky.mesh.rotation.z += .01;
+    WL.SCENE.renderer.render(WL.SCENE.scene, WL.SCENE.camera);
+    requestAnimationFrame(WL.loop);
+}
 
 window.addEventListener('load', WL.init, false);
