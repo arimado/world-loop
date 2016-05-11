@@ -34,6 +34,30 @@ WL.SCENE.OBJ.Sea = function () {
     var geom = new THREE.CylinderGeometry(600, 600, 800, 40, 10);
     // rotate it
     geom.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+
+    // merge verticies - ensures continuity of waves
+    geom.mergeVertices();
+
+    // get verticies length
+    var numOfVertices = geom.vertices.length;
+
+    // this will store data associated to each vertex
+    this.waves = [];
+
+    for (var i = 0; i < numOfVertices; i += 1) {
+        var v = geom.vertices[i];
+
+        var waveData = {};
+        waveData.y = v.y;
+        waveData.x = v.x;
+        waveData.z = v.z;
+        waveData.ang = Math.random() * Math.PI * 2;
+        waveData.amp = 5 + Math.random() * 0.032;
+        waveData.speed = 0.016 + Math.random() * 0.032;
+
+        this.waves.push(waveData);
+    };
+
     // create a material -----------------------
     var mat = new THREE.MeshPhongMaterial({
         color: WL.ENV.color.blue,
@@ -46,6 +70,26 @@ WL.SCENE.OBJ.Sea = function () {
     this.mesh.receiveShadow = true;
     // add the mesh to our scene ---------------
 };
+
+WL.SCENE.OBJ.Sea.prototype.moveWaves = function () {
+    var verts = this.mesh.geometry.vertices;
+    var numOfVertices = verts.length;
+
+    // update position of verticies
+    for  (var i = 0; i < numOfVertices; i += 1) {
+        var v = verts[i];
+        var vprops = this.waves[i];
+
+        v.x = vprops.x + Math.cos(vprops.ang)*vprops.amp;
+        v.y = vprops.y + Math.sin(vprops.ang)*vprops.amp;
+
+        vprops.ang += vprops.speed;
+    }
+
+    this.mesh.geometry.verticesNeedUpdate = true;
+
+    WL.SCENE.OBJ.sea.mesh.rotation.z += .005;
+}
 
 WL.SCENE.OBJ.Cloud = function () {
     // empty container
@@ -325,11 +369,10 @@ WL.SCENE.createScene = function () {
 		WL.ENV.nearPlane,
 		WL.ENV.farPlane
 	);
-
     // SET CAMERA
 
     WL.SCENE.camera.position.x = 0;
-    WL.SCENE.camera.position.z = 80; // ORIGINAL 200
+    WL.SCENE.camera.position.z = 200; // ORIGINAL 200
     WL.SCENE.camera.position.y = 100;
 
     // CREATE RENDERER
@@ -411,7 +454,6 @@ WL.SCENE.updatePlane = function () {
     WL.SCENE.OBJ.plane.propeller.rotation.x += 0.3;
 }
 
-
 WL.EVENT.handleWindowResize = function () {
     WL.ENV.height = window.innerHeight;
     WL.ENV.width = window.innerWidth;
@@ -445,6 +487,7 @@ WL.init = function () {
 WL.loop = function () {
     WL.SCENE.OBJ.plane.propeller.rotation.x += 0.3;
     WL.SCENE.OBJ.sea.mesh.rotation.z += .005;
+    WL.SCENE.OBJ.sea.moveWaves();
     WL.SCENE.OBJ.sky.mesh.rotation.z += .01;
     WL.SCENE.updatePlane();
     WL.SCENE.OBJ.plane.pilot.updateHairs();
